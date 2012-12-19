@@ -39,6 +39,10 @@
 #define kOutputBus 0
 #define kDefaultDevice 999999
 
+#define sampleRateT  8000.0
+//#define sampleRateT  22050.0
+//#define sampleRateT  44100.0
+
 #import "TargetConditionals.h"
 
 static Novocaine *audioManager = nil;
@@ -237,6 +241,9 @@ static Novocaine *audioManager = nil;
     CheckError( AudioSessionSetProperty(kAudioSessionProperty_PreferredHardwareIOBufferDuration, sizeof(preferredBufferSize), &preferredBufferSize), "Couldn't set the preferred buffer duration");
 #endif
     
+    Float64 F64sampleRate = sampleRateT;
+    CheckError( AudioSessionSetProperty(kAudioSessionProperty_PreferredHardwareSampleRate, sizeof(F64sampleRate), &F64sampleRate), "Couldn't set the preferred sample rate");
+    
     
     // Set the audio session active
     CheckError( AudioSessionSetActive(YES), "Couldn't activate the audio session");
@@ -351,8 +358,8 @@ static Novocaine *audioManager = nil;
                "Couldn't get the hardware output stream format");
     
     // TODO: check this works on iOS!
-    inputFormat.mSampleRate = 44100.0;
-    outputFormat.mSampleRate = 44100.0;
+    inputFormat.mSampleRate = sampleRateT;
+    outputFormat.mSampleRate = sampleRateT;
     self.samplingRate = inputFormat.mSampleRate;
     self.numBytesPerSample = inputFormat.mBitsPerChannel / 8;
     
