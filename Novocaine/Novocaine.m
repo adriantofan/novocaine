@@ -40,6 +40,7 @@
 #define kDefaultDevice 999999
 
 #define sampleRateT  8000.0
+#define IOBufferDuration 0.0232*2
 //#define sampleRateT  22050.0
 //#define sampleRateT  44100.0
 
@@ -237,7 +238,7 @@ static Novocaine *audioManager = nil;
     // Set the buffer size, this will affect the number of samples that get rendered every time the audio callback is fired
     // A small number will get you lower latency audio, but will make your processor work harder
 #if !TARGET_IPHONE_SIMULATOR
-    Float32 preferredBufferSize = 0.0232;
+    Float32 preferredBufferSize = IOBufferDuration;
     CheckError( AudioSessionSetProperty(kAudioSessionProperty_PreferredHardwareIOBufferDuration, sizeof(preferredBufferSize), &preferredBufferSize), "Couldn't set the preferred buffer duration");
 #endif
     
@@ -864,13 +865,13 @@ void sessionInterruptionListener(void *inClientData, UInt32 inInterruption) {
 	if (inInterruption == kAudioSessionBeginInterruption) {
 		NSLog(@"Begin interuption");
 		sm.inputAvailable = NO;
+        [sm pause];
 	}
 	else if (inInterruption == kAudioSessionEndInterruption) {
 		NSLog(@"End interuption");	
 		sm.inputAvailable = YES;
 		[sm play];
 	}
-	
 }
 
 #endif

@@ -49,18 +49,40 @@
     ringBuffer = new RingBuffer(32768, 2); 
     audioManager = [Novocaine audioManager];
 
+    static int lastsecond = [[NSDate date] timeIntervalSince1970];
+    static float speed = 0;
     
     // Basic playthru example
     [audioManager setInputBlock:^(float *data, UInt32 numFrames, UInt32 numChannels) {
-        float volume = 0.5;
-        vDSP_vsmul(data, 1, &volume, data, 1, numFrames*numChannels);
+//        float volume = 0.5;
+//        vDSP_vsmul(data, 1, &volume, data, 1, numFrames*numChannels);
         ringBuffer->AddNewInterleavedFloatData(data, numFrames, numChannels);
+        
+
+        // Get KB/sec
+//        NSLog(@"numFrames %ld", numFrames);
+        speed += (numFrames * sizeof(float));
+        int cursec = (int)[[NSDate date] timeIntervalSince1970];
+        if(cursec > lastsecond){
+            NSLog(@"numFrames %ld", numFrames);
+            NSLog(@"%f KB/s", speed/1024);
+            speed = 0;
+        }
+        lastsecond = cursec;
     }];
     
     
+    
+
     [audioManager setOutputBlock:^(float *outData, UInt32 numFrames, UInt32 numChannels) {
         ringBuffer->FetchInterleavedData(outData, numFrames, numChannels);
     }];
+
+
+    
+    
+    
+
     
     
      // MAKE SOME NOOOOO OIIIISSSEEE

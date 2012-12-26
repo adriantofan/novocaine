@@ -156,6 +156,10 @@ void RingBuffer::AddNewInterleavedFloatData(const float *newData, const SInt64 n
 		mLastWrittenIndex[iChannel] = (mLastWrittenIndex[iChannel] + numFrames) % (mSizeOfBuffer);
         mNumUnreadFrames[iChannel] = (mNumUnreadFrames[iChannel] + numFrames);
         if (mNumUnreadFrames[iChannel] >= mSizeOfBuffer) mNumUnreadFrames[iChannel] = mSizeOfBuffer;
+        
+        
+//        NSLog(@"mLastWrittenIndex[iChannel] %lld", mLastWrittenIndex[iChannel]);
+        
 	}
 	
 	
