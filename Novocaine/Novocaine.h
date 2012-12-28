@@ -180,5 +180,9 @@ typedef void (^InputBlock)(float *data, UInt32 numFrames, UInt32 numChannels);
 - (void)checkAudioSource;
 #endif
 
+- (void)routeToSpeaker;
+- (void)routeToHeadphone;
+-(void) routeSpeaker;
+-(void) routeToDefaultSpeaker;
 
 @end

@@ -279,7 +279,7 @@ static Novocaine *audioManager = nil;
 #elif defined (USING_IOS)
     AudioComponentDescription inputDescription = {0};	
     inputDescription.componentType = kAudioUnitType_Output;
-    inputDescription.componentSubType = kAudioUnitSubType_RemoteIO;
+    inputDescription.componentSubType = kAudioUnitSubType_VoiceProcessingIO;
     inputDescription.componentManufacturer = kAudioUnitManufacturer_Apple;
     
 #endif
@@ -893,6 +893,50 @@ void sessionInterruptionListener(void *inClientData, UInt32 inInterruption) {
 }
 
 #endif
+
+
+
+-(void)routeToSpeaker
+{
+	UInt32 audioRouteOverride = kAudioSessionOverrideAudioRoute_Speaker;  // 1
+	
+	CheckError( AudioSessionSetProperty (kAudioSessionProperty_OverrideAudioRoute,
+										 sizeof(kAudioSessionCategory_PlayAndRecord),
+										 &audioRouteOverride
+										 ), "err1 - speaker");
+}
+-(void)routeToHeadphone
+{
+	UInt32 audioRouteOverride = kAudioSessionOverrideAudioRoute_None;
+	
+	CheckError( AudioSessionSetProperty (kAudioSessionProperty_OverrideAudioRoute,
+										 sizeof(kAudioSessionCategory_PlayAndRecord),
+										 &audioRouteOverride
+										 ), "err2 - headphone");
+}
+
+-(void)routeSpeaker
+{
+	UInt32 audioRouteOverride = kAudioSessionOverrideAudioRoute_Speaker;  // 1
+	
+	AudioSessionSetProperty (
+							 kAudioSessionProperty_OverrideAudioRoute,                         // 2
+							 sizeof (audioRouteOverride),                                      // 3
+							 &audioRouteOverride                                               // 4
+							 );
+	
+}
+
+-(void)routeToDefaultSpeaker
+{
+	UInt32 audioRouteOverride = kAudioSessionOverrideAudioRoute_None;  // 1
+	
+	AudioSessionSetProperty (
+							 kAudioSessionProperty_OverrideAudioRoute,                         // 2
+							 sizeof (audioRouteOverride),                                      // 3
+							 &audioRouteOverride                                               // 4
+							 );
+}
 
 
 #pragma mark - Convenience Methods
