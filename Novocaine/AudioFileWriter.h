@@ -59,6 +59,7 @@
 // The buffer'll fill at the speed the audio is normally being played.
 - (void)writeNewAudio:(float *)newData numFrames:(UInt32)thisNumFrames numChannels:(UInt32)thisNumChannels;
 
+- (void)stop;
 - (void)record;
 - (void)pause;
 
