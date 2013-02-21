@@ -39,9 +39,9 @@
 #define kOutputBus 0
 #define kDefaultDevice 999999
 
-#define sampleRateT  8000.0
+//#define sampleRateT  8000.0
 #define IOBufferDuration 0.0232*2
-//#define sampleRateT  22050.0
+#define sampleRateT  22050.0
 //#define sampleRateT  44100.0
 
 #import "TargetConditionals.h"
