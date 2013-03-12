@@ -22,8 +22,8 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 #import <Foundation/Foundation.h>
-#import "RingBuffer.h"
 #import "Novocaine.h"
+
 
 
 @interface AudioFileReader : NSObject

@@ -69,7 +69,7 @@ static pthread_mutex_t outputAudioFileLock;
     
     free(self.outputBuffer);
     free(self.holdingBuffer);
-    
+    pthread_mutex_destroy(&outputAudioFileLock);
     [super dealloc];
 }
 
@@ -89,8 +89,13 @@ static pthread_mutex_t outputAudioFileLock;
         
         AudioStreamBasicDescription outputFileDesc = {44100.0, kAudioFormatMPEG4AAC, 0, 0, 1024, 0, thisNumChannels, 0, 0};
         
-        CheckError(ExtAudioFileCreateWithURL(audioFileRef, kAudioFileM4AType, &outputFileDesc, NULL, kAudioFileFlags_EraseFile, &_outputFile), "Creating file");
-        
+        NSError *error = novocaine_checkOSStatusError(ExtAudioFileCreateWithURL(audioFileRef, kAudioFileM4AType, &outputFileDesc, NULL, kAudioFileFlags_EraseFile, &_outputFile), @"Creating file");
+        if (error) {
+          NSLog(@"Error: %@",error);
+          self.audioFileURL = nil;
+          self = nil;
+          return nil;
+        }
         
         // Set a few defaults and presets
         self.samplingRate = thisSamplingRate;
@@ -123,10 +128,21 @@ static pthread_mutex_t outputAudioFileLock;
         // mutex here //
         if( 0 == pthread_mutex_trylock( &outputAudioFileLock ) ) 
         {       
-            CheckError( ExtAudioFileWriteAsync(self.outputFile, 0, NULL), "Initializing audio file");
+            NSError* error =  novocaine_checkOSStatusError( ExtAudioFileWriteAsync(self.outputFile, 0, NULL), @"Initializing audio file");
+          if (error) {
+            NSLog(@"Error: %@",error);
+            ExtAudioFileDispose(_outputFile);
+            free(self.outputBuffer);
+            free(self.holdingBuffer);
+            self = nil;
+            return nil;
+          }
         }
         pthread_mutex_unlock( &outputAudioFileLock );
-        
+        if (!self) {
+          pthread_mutex_destroy(&outputAudioFileLock);
+          outputAudioFileLock = (pthread_mutex_t){0};
+        }
     }
     return self;
 }

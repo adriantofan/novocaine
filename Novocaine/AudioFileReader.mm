@@ -26,6 +26,9 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 #import "AudioFileReader.h"
+#import "RingBuffer.h"
+#import "Novocaine.h"
+
 
 @interface AudioFileReader ()
 {
@@ -102,9 +105,14 @@
         // Open a reference to the audio file
         self.audioFileURL = urlToAudioFile;
         CFURLRef audioFileRef = (CFURLRef)self.audioFileURL;
-        CheckError(ExtAudioFileOpenURL(audioFileRef, &_inputFile), "Opening file URL (ExtAudioFileOpenURL)");
+        NSError *error = novocaine_checkOSStatusError(ExtAudioFileOpenURL(audioFileRef, &_inputFile), @"Opening file URL (ExtAudioFileOpenURL)");
+        if (error) {
+          NSLog(@"Error : %@",error);
+          self.audioFileURL = nil;
+          self=nil;
+          return self;
+        }
 
-        
         // Set a few defaults and presets
         self.samplingRate = thisSamplingRate;
         self.numChannels = thisNumChannels;
