@@ -29,39 +29,29 @@
 
 @interface AudioFileWriter()
 
-@property AudioStreamBasicDescription outputFormat;
-@property ExtAudioFileRef outputFile;
-@property UInt32 outputBufferSize;
-@property float *outputBuffer;
-@property float *holdingBuffer;
-@property SInt64 currentFileTime;
-@property dispatch_source_t callbackTimer;
-@property (readwrite) float currentTime;
+// redeclare as readwrite in class continuation
+@property (nonatomic, assign, getter=getDuration, readwrite) float currentTime;
+@property (nonatomic, assign, getter=getDuration, readwrite) float duration;
+@property (nonatomic, assign, readwrite) float samplingRate;
+@property (nonatomic, assign, readwrite) UInt32 numChannels;
+@property (nonatomic, assign, readwrite) float latency;
+@property (nonatomic, copy, readwrite)   NSURL *audioFileURL;
+@property (nonatomic, assign, readwrite) BOOL recording;
+
+@property (nonatomic, assign) AudioStreamBasicDescription outputFormat;
+@property (nonatomic, assign) ExtAudioFileRef outputFile;
+@property (nonatomic, assign) UInt32 outputBufferSize;
+@property (nonatomic, assign) float *outputBuffer;
+@property (nonatomic, assign) float *holdingBuffer;
+@property (nonatomic, assign) SInt64 currentFileTime;
+@property (nonatomic, assign) dispatch_source_t callbackTimer;
 
 @end
-
 
 
 @implementation AudioFileWriter
 
 static pthread_mutex_t outputAudioFileLock;
-
-@synthesize outputFormat = _outputFormat;
-@synthesize outputFile = _outputFile;
-@synthesize outputBuffer = _outputBuffer;
-@synthesize holdingBuffer = _holdingBuffer;
-@synthesize outputBufferSize = _outputBufferSize;
-@synthesize currentFileTime = _currentFileTime;
-@synthesize callbackTimer = _callbackTimer;
-
-@synthesize currentTime = _currentTime;
-@synthesize duration = _duration;
-@synthesize samplingRate = _samplingRate;
-@synthesize latency = _latency;
-@synthesize numChannels = _numChannels;
-@synthesize audioFileURL = _audioFileURL;
-@synthesize writerBlock = _writerBlock;
-@synthesize recording = _recording;
 
 - (void)dealloc
 {
@@ -69,8 +59,7 @@ static pthread_mutex_t outputAudioFileLock;
     
     free(self.outputBuffer);
     free(self.holdingBuffer);
-    pthread_mutex_destroy(&outputAudioFileLock);
-    [super dealloc];
+    
 }
 
 - (id)initWithAudioFileURL:(NSURL *)urlToAudioFile samplingRate:(float)thisSamplingRate numChannels:(UInt32)thisNumChannels
@@ -85,17 +74,12 @@ static pthread_mutex_t outputAudioFileLock;
         
         // Open a reference to the audio file
         self.audioFileURL = urlToAudioFile;
-        CFURLRef audioFileRef = (CFURLRef)self.audioFileURL;
+        CFURLRef audioFileRef = (__bridge CFURLRef)self.audioFileURL;
         
         AudioStreamBasicDescription outputFileDesc = {44100.0, kAudioFormatMPEG4AAC, 0, 0, 1024, 0, thisNumChannels, 0, 0};
         
-        NSError *error = novocaine_checkOSStatusError(ExtAudioFileCreateWithURL(audioFileRef, kAudioFileM4AType, &outputFileDesc, NULL, kAudioFileFlags_EraseFile, &_outputFile), @"Creating file");
-        if (error) {
-          NSLog(@"Error: %@",error);
-          self.audioFileURL = nil;
-          self = nil;
-          return nil;
-        }
+        CheckError(ExtAudioFileCreateWithURL(audioFileRef, kAudioFileM4AType, &outputFileDesc, NULL, kAudioFileFlags_EraseFile, &_outputFile), "Creating file");
+        
         
         // Set a few defaults and presets
         self.samplingRate = thisSamplingRate;
@@ -128,21 +112,10 @@ static pthread_mutex_t outputAudioFileLock;
         // mutex here //
         if( 0 == pthread_mutex_trylock( &outputAudioFileLock ) ) 
         {       
-            NSError* error =  novocaine_checkOSStatusError( ExtAudioFileWriteAsync(self.outputFile, 0, NULL), @"Initializing audio file");
-          if (error) {
-            NSLog(@"Error: %@",error);
-            ExtAudioFileDispose(_outputFile);
-            free(self.outputBuffer);
-            free(self.holdingBuffer);
-            self = nil;
-            return nil;
-          }
+            CheckError( ExtAudioFileWriteAsync(self.outputFile, 0, NULL), "Initializing audio file");
         }
         pthread_mutex_unlock( &outputAudioFileLock );
-        if (!self) {
-          pthread_mutex_destroy(&outputAudioFileLock);
-          outputAudioFileLock = (pthread_mutex_t){0};
-        }
+        
     }
     return self;
 }
