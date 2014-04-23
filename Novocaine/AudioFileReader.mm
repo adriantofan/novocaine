@@ -26,6 +26,7 @@
 // OTHER DEALINGS IN THE SOFTWARE.
 
 #import "AudioFileReader.h"
+#import "RingBuffer.h"
 
 @interface AudioFileReader ()
 {
